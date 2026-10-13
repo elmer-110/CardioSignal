@@ -1,6 +1,6 @@
 # CardioSignal
 
-**v0.1 — Exploración de ECG y detección de picos. Proyecto en desarrollo.**
+**Proyecto en desarrollo — Exploración de ECG y detección de picos.**
 
 Proyecto de aprendizaje en Python que conecta física y procesamiento de
 señales. El objetivo a largo plazo es estudiar la clasificación de ECG y su
@@ -55,6 +55,37 @@ guardan en `figures/primer_ecg.png` y `figures/intervalos_rr.png`.
 recoge las versiones del entorno probado. VS Code está configurado para usar
 `.venv/Scripts/python.exe`.
 
+## Práctica 2: comparar cinco ECG
+
+```powershell
+.\.venv\Scripts\python.exe comparar_ecgs.py
+```
+
+Aplica las mismas reglas a los registros `00001_lr` a `00005_lr`, sin ajustar
+los parámetros individualmente. Genera `figures/comparacion_ecgs.png` y
+`reports/comparacion_ecgs.json`, con los parámetros, picos e intervalos.
+La descarga se limita a estos cinco registros y se reutiliza en ejecuciones
+posteriores. Todos los paneles comparten escala vertical.
+
+![Comparación de cinco ECG](docs/images/comparacion_ecgs.png)
+
+| Registro | Picos candidatos | Frecuencia estimada (lat/min) |
+| --- | --- | --- |
+| 00001_lr | 11 | 63,9 |
+| 00002_lr | 8 | 47,0 |
+| 00003_lr | 11 | 63,6 |
+| 00004_lr | 13 | 75,1 |
+| 00005_lr | 11 | 66,3 |
+
+Son cinco registros consecutivos, no una muestra representativa ni
+necesariamente cinco pacientes distintos. No usamos anotaciones de referencia
+de picos: esta práctica es una inspección visual, no una evaluación de precisión.
+
+Ejercicio: observa si cada máximo estrecho está marcado, si hay puntos sobre
+otras ondas y si existen picos negativos que el detector no pueda identificar.
+Compara especialmente la forma de la señal entre registros. Una frecuencia
+aparentemente razonable no demuestra que las detecciones sean correctas.
+
 ## Método
 
 1. Leer el registro con WFDB en unidades físicas y seleccionar la derivación II.
@@ -72,7 +103,7 @@ recoge las versiones del entorno probado. VS Code está configurado para usar
 - El método busca máximos positivos y no cubre todas las morfologías posibles.
 - La separación mínima de 0,4 s limita las detecciones cercanas entre sí.
 - Los tiempos están en una rejilla de 0,01 s, sin interpolación.
-- Se ha revisado visualmente un registro. No se ha evaluado el detector frente
+- Se han inspeccionado visualmente cinco registros. No se ha evaluado el detector frente
   a anotaciones de referencia ni medido su sensibilidad o precisión.
 - Los resultados no permiten establecer aquí un diagnóstico.
 
@@ -96,9 +127,10 @@ Wagner, P., Strodthoff, N., Bousseljot, R.-D., Samek, W., y Schaeffter, T.
 (version 1.0.3). PhysioNet. https://doi.org/10.13026/kfzx-aw45
 
 Los datos tienen licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-Las imágenes incluidas son visualizaciones derivadas del registro `00001_lr`:
+Las imágenes incluidas son visualizaciones derivadas de los registros
+`00001_lr` a `00005_lr`:
 selección de la derivación II, marcado de máximos y cálculo de intervalos.
 Estas imágenes se comparten bajo CC BY 4.0 con la atribución anterior.
 
 Los datos descargados, los gráficos de ejecución y el entorno virtual quedan
-fuera del repositorio. `docs/images/` contiene los dos gráficos de ejemplo.
+fuera del repositorio. `docs/images/` contiene los gráficos de ejemplo.
