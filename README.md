@@ -121,6 +121,55 @@ de deriva variable con el tiempo y no demuestra resistencia a todo tipo de
 ruido ni que los máximos detectados sean picos R correctos. Los datos originales
 permanecen intactos. No se escoge un umbral óptimo a partir de este experimento.
 
+## Práctica 4: etiquetas y pacientes
+
+```powershell
+.\.venv\Scripts\python.exe explorar_etiquetas.py
+```
+
+Descarga únicamente `ptbxl_database.csv` y `scp_statements.csv` de PTB-XL 1.0.3
+a `data/metadata/`. Lee los códigos con `ast.literal_eval`, conserva los códigos
+diagnósticos y los agrupa en las cinco superclases oficiales: NORM, MI, STTC,
+CD y HYP. Una clase se cuenta una sola vez por ECG, aunque tenga varios códigos.
+No se aplica umbral de confianza: un `likelihood` de cero significa confianza
+desconocida, no ausencia. Esta política describe anotaciones, no diagnósticos
+confirmados para cada caso. Un registro sin clase diagnóstica no se convierte
+en un ejemplo normal.
+
+El resumen muestra registros, pacientes, categorías y los cinco ejemplos ya
+explorados. Las categorías pueden coexistir: la futura tarea de cinco clases
+sería **multietiqueta**, no una elección obligatoria de una única clase.
+Las categorías no cubren todas las enfermedades cardíacas ni predicen eventos
+futuros; NORM tampoco demuestra que una persona esté libre de enfermedad.
+
+Se comprueban identificadores únicos y los folds oficiales: 1–8 para entrenar,
+9 para validación y 10 para prueba. El programa se detiene si un paciente
+aparece en varios folds. No se realiza una división aleatoria por registro.
+Las distribuciones globales son descriptivas; el test se reservará para la
+evaluación final, sin ajustar modelos o umbrales con sus resultados.
+
+Salida: `reports/etiquetas_resumen.json`, con recuentos, política de etiquetas,
+particiones y hashes SHA-256 de los archivos usados. No incluye identificadores
+de pacientes ni informes clínicos. No entrena un modelo ni descarga todas las
+señales. La exploración de etiquetas no sustituye la validación del detector de
+picos frente a anotaciones temporales.
+
+Resultados comprobados con esta versión:
+
+- 21.799 ECG y 18.869 pacientes; 2.111 pacientes tienen varios registros.
+- Categorías: NORM 9.514; MI 5.469; STTC 5.235; CD 4.898; HYP 2.649.
+- 5.144 registros tienen varias categorías y 411 no tienen clase diagnóstica.
+- Los cinco ejemplos iniciales tienen NORM y pertenecen al conjunto de entrenamiento.
+
+| Partición oficial | Folds | ECG | Pacientes |
+| --- | --- | --- | --- |
+| Entrenamiento | 1–8 | 17.418 | 15.023 |
+| Validación | 9 | 2.183 | 1.942 |
+| Prueba | 10 | 2.198 | 1.904 |
+
+No hay pacientes compartidos entre folds. Los recuentos anteriores son previos
+a cualquier filtrado para una futura tarea de aprendizaje.
+
 ## Método
 
 1. Leer el registro con WFDB en unidades físicas y seleccionar la derivación II.
@@ -147,7 +196,8 @@ permanecen intactos. No se escoge un umbral óptimo a partir de este experimento
 - [x] Cargar y visualizar un ECG real.
 - [x] Detectar picos candidatos y representar intervalos RR.
 - [ ] Evaluar en más registros y con referencias adecuadas.
-- [ ] Explorar etiquetas y definir una tarea de clasificación.
+- [x] Explorar etiquetas y comprobar separación oficial de pacientes.
+- [ ] Definir la tarea de clasificación y sus criterios de inclusión.
 - [ ] Separar entrenamiento, validación y prueba por paciente.
 - [ ] Entrenar un modelo sencillo de referencia.
 - [ ] Comparar modelos y evaluar errores, ruido y calibración.
