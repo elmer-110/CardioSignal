@@ -86,6 +86,41 @@ otras ondas y si existen picos negativos que el detector no pueda identificar.
 Compara especialmente la forma de la señal entre registros. Una frecuencia
 aparentemente razonable no demuestra que las detecciones sean correctas.
 
+## Práctica 3: altura y prominencia
+
+```powershell
+.\.venv\Scripts\python.exe altura_prominencia.py
+```
+
+Compara dos detectores sobre la derivación II de `00004_lr`: uno exige
+altura mínima de 0,2 mV y otro prominencia mínima de 0,2 mV. Ambos mantienen
+una distancia mínima de 0,4 s. Repite la comparación después de restar 1 mV
+a todas las muestras, conservando la forma y los tiempos de la señal.
+
+![Altura frente a prominencia](docs/images/altura_prominencia.png)
+
+| Señal | Por altura | Por prominencia |
+| --- | --- | --- |
+| Original | 13 candidatos | 13 candidatos |
+| Original menos 1 mV | 8 candidatos | 13 candidatos |
+
+En la ejecución comprobada, las posiciones por prominencia coinciden exactamente
+antes y después del desplazamiento.
+
+La altura se mide respecto a cero. La prominencia se mide respecto a la línea
+de contorno que define el algoritmo a partir de las bases a ambos lados del
+pico. Al sumar una constante, el pico y su línea de contorno cambian en la
+misma cantidad, por lo que su diferencia se conserva.
+
+El programa compara las posiciones exactas de las detecciones por prominencia,
+no solo su número. Guarda el gráfico en `figures/altura_prominencia.png` y los
+parámetros y resultados en `reports/altura_prominencia.json`.
+
+**Alcance:** es un desplazamiento constante artificial. No es una simulación
+de deriva variable con el tiempo y no demuestra resistencia a todo tipo de
+ruido ni que los máximos detectados sean picos R correctos. Los datos originales
+permanecen intactos. No se escoge un umbral óptimo a partir de este experimento.
+
 ## Método
 
 1. Leer el registro con WFDB en unidades físicas y seleccionar la derivación II.
@@ -129,7 +164,8 @@ Wagner, P., Strodthoff, N., Bousseljot, R.-D., Samek, W., y Schaeffter, T.
 Los datos tienen licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 Las imágenes incluidas son visualizaciones derivadas de los registros
 `00001_lr` a `00005_lr`:
-selección de la derivación II, marcado de máximos y cálculo de intervalos.
+selección de la derivación II, marcado de máximos, cálculo de intervalos y,
+en la práctica 3, desplazamiento artificial constante de -1 mV.
 Estas imágenes se comparten bajo CC BY 4.0 con la atribución anterior.
 
 Los datos descargados, los gráficos de ejecución y el entorno virtual quedan
