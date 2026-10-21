@@ -40,9 +40,13 @@ def read_metadata(filename):
 
 
 def diagnostic_classes(codes, mapping):
-    # La presencia del código cuenta; no interpretamos likelihood=0 como ausencia.
-    # set evita contar dos veces una clase con varios códigos asociados.
-    return sorted({mapping[code] for code in codes if code in mapping})
+    # Cero significa confianza desconocida: conservamos el código presente.
+    # El conjunto elimina categorías duplicadas antes de ordenar la salida.
+    return sorted({
+        mapping[code]
+        for code in codes
+        if code in mapping
+    })
 
 
 def main():

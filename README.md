@@ -170,6 +170,22 @@ Resultados comprobados con esta versión:
 No hay pacientes compartidos entre folds. Los recuentos anteriores son previos
 a cualquier filtrado para una futura tarea de aprendizaje.
 
+## Pruebas automáticas
+
+Desde la carpeta del proyecto:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -v
+```
+
+Las tres pruebas de `test_etiquetas.py` verifican categorías sin duplicados,
+códigos sin correspondencia diagnóstica y códigos con confianza cero. No
+necesitan descargar datos. Cada método `test_...` está directamente dentro
+de la clase: una función anidada no se ejecutaría automáticamente.
+
+Estas pruebas cubren la conversión de etiquetas, no la precisión del detector
+de picos ni todos los casos de error del proyecto.
+
 ## Método
 
 1. Leer el registro con WFDB en unidades físicas y seleccionar la derivación II.
