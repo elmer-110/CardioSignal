@@ -170,6 +170,41 @@ Resultados comprobados con esta versión:
 No hay pacientes compartidos entre folds. Los recuentos anteriores son previos
 a cualquier filtrado para una futura tarea de aprendizaje.
 
+## Preparación de objetivos multietiqueta
+
+La práctica `explorar_etiquetas.py` conecta las funciones mediante
+`preparar_objetivo(codes, mapping)`:
+
+```python
+categorias = diagnostic_classes(codes, mapping)
+if not categorias:
+    return None
+return codificar_etiquetas(categorias)
+```
+
+El orden fijo es `NORM, MI, STTC, CD, HYP`. Por ejemplo, MI y STTC producen
+`[0, 1, 1, 0, 0]`. La codificación aislada de una lista vacía devuelve ceros,
+pero el proceso de preparación excluye esos registros antes de guardarlos.
+NORM sigue siendo una etiqueta explícita. Una categoría desconocida genera
+`ValueError` para no ocultar errores de escritura o cambios en el catálogo.
+
+Ejecutar `explorar_etiquetas.py` genera estos archivos locales:
+
+| Archivo en `data/processed/` | Incluidos | Excluidos sin categoría |
+| --- | --- | --- |
+| `etiquetas_train.json` | 17.084 | 334 |
+| `etiquetas_validation.json` | 2.146 | 37 |
+| `etiquetas_test.json` | 2.158 | 40 |
+
+Cada archivo conserva el orden de columnas, la versión y hashes de los
+metadatos, la política aplicada y, por registro, `ecg_id`, `patient_id`,
+`filename_lr`, `fold` y `y`. Los archivos quedan excluidos de Git. Se conservan
+las particiones oficiales; no se seleccionan pacientes de nuevo tras filtrar.
+Los vectores y rutas están preparados, pero todavía no hemos descargado todas
+las señales, construido características de entrada ni entrenado un modelo.
+El rendimiento futuro se referirá a registros con alguna categoría diagnóstica;
+los casos sin categoría quedan fuera de esa evaluación inicial.
+
 ## Pruebas automáticas
 
 Desde la carpeta del proyecto:
@@ -178,9 +213,11 @@ Desde la carpeta del proyecto:
 .\.venv\Scripts\python.exe -m unittest discover -v
 ```
 
-Las tres pruebas de `test_etiquetas.py` verifican categorías sin duplicados,
-códigos sin correspondencia diagnóstica y códigos con confianza cero. No
-necesitan descargar datos. Cada método `test_...` está directamente dentro
+Las nueve pruebas de `test_etiquetas.py`, `test_codificar_etiquetas.py` y
+`test_preparar_objetivos.py` verifican categorías sin duplicados, confianza cero,
+orden de columnas, ausencia de etiquetas frente a NORM y la conexión completa
+entre códigos y vectores. También comprueban que se rechazan categorías
+desconocidas. No necesitan descargar datos. Cada método `test_...` está directamente dentro
 de la clase: una función anidada no se ejecutaría automáticamente.
 
 Estas pruebas cubren la conversión de etiquetas, no la precisión del detector

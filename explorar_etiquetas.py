@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 from urllib.request import urlopen
 
+from codificar_etiquetas import CLASES, codificar_etiquetas
+
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = "https://physionet.org/files/ptb-xl/1.0.3"
@@ -49,6 +51,14 @@ def diagnostic_classes(codes, mapping):
     })
 
 
+def preparar_objetivo(codes, mapping):
+    """Conecta códigos y vector; None excluye registros sin categoría diagnóstica."""
+    categorias = diagnostic_classes(codes, mapping)
+    if not categorias:
+        return None
+    return codificar_etiquetas(categorias)
+
+
 def main():
     rows, database_hash = read_metadata("ptbxl_database.csv")
     statements, statements_hash = read_metadata("scp_statements.csv")
@@ -70,6 +80,8 @@ def main():
     split_patients = defaultdict(set)
     label_counts = Counter()
     examples = []
+    targets = {key: [] for key in ("train", "validation", "test")}
+    excluded = Counter()
     seen_ecgs = set()
     for row in rows:
         ecg_id = int(row["ecg_id"])
@@ -87,6 +99,15 @@ def main():
         if not isinstance(codes, dict) or not set(codes) <= known_codes:
             raise ValueError(f"Códigos inválidos o desconocidos en ECG {ecg_id}")
         labels = diagnostic_classes(codes, mapping)
+        target = preparar_objetivo(codes, mapping)
+        if target is None:
+            excluded[split] += 1
+        else:
+            targets[split].append({
+                "ecg_id": ecg_id, "patient_id": patient,
+                "filename_lr": row["filename_lr"],
+                "fold": fold, "y": target,
+            })
         counts.update(labels)
         label_counts[len(labels)] += 1
         patient_folds[patient].add(fold)
@@ -119,12 +140,36 @@ def main():
                          "patients": len(split_patients[key])}
                    for key in ("train", "validation", "test")},
         "patient_overlap": False,
+        "class_order": CLASES,
+        "target_policy": "Excluir registros sin categoría diagnóstica; mantener folds oficiales",
+        "targets_by_split": {
+            key: {"included": len(targets[key]), "excluded": excluded[key]}
+            for key in targets
+        },
         "explored_examples": sorted(examples, key=lambda item: item["ecg_id"]),
     }
     output = ROOT / "reports" / "etiquetas_resumen.json"
     output.parent.mkdir(exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n",
                       encoding="utf-8")
+
+    # Solo guardamos los objetivos después de validar todas las particiones.
+    processed = ROOT / "data" / "processed"
+    processed.mkdir(parents=True, exist_ok=True)
+    for split, records in targets.items():
+        document = {
+            "dataset": report["dataset"], "sha256": report["sha256"],
+            "class_order": CLASES, "split": split,
+            "label_policy": report["label_policy"],
+            "target_policy": report["target_policy"],
+            "excluded_without_diagnostic_class": excluded[split],
+            "records": sorted(records, key=lambda item: item["ecg_id"]),
+        }
+        destination = processed / f"etiquetas_{split}.json"
+        temporary = destination.with_suffix(".tmp")
+        temporary.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n",
+                             encoding="utf-8")
+        temporary.replace(destination)
 
     print(f"Registros: {len(rows)} | Pacientes: {len(patient_folds)}")
     print(f"Pacientes con varios registros: {report['patients_with_multiple_records']}")
@@ -141,6 +186,10 @@ def main():
     for key, summary in report["splits"].items():
         print(f"  {key}: {summary['records']} ECG / {summary['patients']} pacientes")
     print("Comprobación: ningún paciente compartido entre folds.")
+    print("\nObjetivos multietiqueta; columnas:", CLASES)
+    for split in targets:
+        print(f"  {split}: {len(targets[split])} incluidos / {excluded[split]} excluidos")
+    print("Archivos de objetivos: data/processed/etiquetas_<partición>.json")
     print(f"Resumen guardado en: {output}")
 
 
