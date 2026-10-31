@@ -201,9 +201,22 @@ metadatos, la política aplicada y, por registro, `ecg_id`, `patient_id`,
 `filename_lr`, `fold` y `y`. Los archivos quedan excluidos de Git. Se conservan
 las particiones oficiales; no se seleccionan pacientes de nuevo tras filtrar.
 Los vectores y rutas están preparados, pero todavía no hemos descargado todas
-las señales, construido características de entrada ni entrenado un modelo.
+las señales, construido la matriz de entrada del conjunto ni entrenado un modelo.
 El rendimiento futuro se referirá a registros con alguna categoría diagnóstica;
 los casos sin categoría quedan fuera de esa evaluación inicial.
+
+## Características de amplitud
+
+Ejecuta `extraer_caracteristicas.py` con el Python del entorno virtual.
+Calcula media, desviación estándar (`ddof=0`) y amplitud pico a pico en mV
+para cada una de las 12 derivaciones del primer ECG: 36 características.
+La función recibe una única derivación y rechaza señales vacías,
+multidimensionales o con NaN/infinito. El ejemplo comprueba las unidades.
+
+Al sumar 1 mV a la derivación II, la media pasa de 0,0007 a 1,0007 mV;
+la desviación estándar permanece en 0,0832 mV y el pico a pico en 0,5750 mV.
+Estas medidas no conservan el orden temporal de las muestras.
+Todavía falta extraer las características del conjunto y conectarlas con `y`.
 
 ## Pruebas automáticas
 
@@ -220,7 +233,11 @@ entre códigos y vectores. También comprueban que se rechazan categorías
 desconocidas. No necesitan descargar datos. Cada método `test_...` está directamente dentro
 de la clase: una función anidada no se ejecutaría automáticamente.
 
-Estas pruebas cubren la conversión de etiquetas, no la precisión del detector
+Las cuatro pruebas de `test_caracteristicas.py` comprueban valores conocidos,
+desplazamiento constante, señal constante y rechazo de entradas inválidas.
+En total hay 13 pruebas que no requieren acceso a la red.
+
+Estas pruebas cubren etiquetas y características, no la precisión del detector
 de picos ni todos los casos de error del proyecto.
 
 ## Método
@@ -250,8 +267,10 @@ de picos ni todos los casos de error del proyecto.
 - [x] Detectar picos candidatos y representar intervalos RR.
 - [ ] Evaluar en más registros y con referencias adecuadas.
 - [x] Explorar etiquetas y comprobar separación oficial de pacientes.
-- [ ] Definir la tarea de clasificación y sus criterios de inclusión.
-- [ ] Separar entrenamiento, validación y prueba por paciente.
+- [x] Definir la tarea de clasificación y sus criterios de inclusión.
+- [x] Separar entrenamiento, validación y prueba por paciente.
+- [x] Extraer 36 características de amplitud de un ECG.
+- [ ] Construir la matriz de características y conectarla con los objetivos.
 - [ ] Entrenar un modelo sencillo de referencia.
 - [ ] Comparar modelos y evaluar errores, ruido y calibración.
 - [ ] Preparar una demo documentada.
