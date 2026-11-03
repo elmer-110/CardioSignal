@@ -15,6 +15,20 @@ def extraer_caracteristicas(ecg):
         "pico_a_pico_mv": float(np.max(ecg) - np.min(ecg))
     }
 
+def extraer_caracteristicas_registro(record):
+    """Extrae características de cada derivación en el orden del registro."""
+    if any(unidad != "mV" for unidad in record.units):
+        raise ValueError("Se necesitan todas las derivaciones en mV")
+
+    resultado = {}
+    for indice, derivacion in enumerate(record.sig_name):
+        señal = record.p_signal[:, indice]
+        caracteristicas = extraer_caracteristicas(señal)
+        for nombre, valor in caracteristicas.items():
+            resultado[f"{derivacion}_{nombre}"] = valor
+    return resultado
+
+
 if __name__ == "__main__":
     from comparar_ecgs import load_record
 
@@ -39,15 +53,7 @@ if __name__ == "__main__":
 
         print(f"{nombre}: {original:.4f} -> {desplazado:.4f}")
 
-    caracteristicas_ecg = {}
-
-    for indice, derivacion in enumerate(record.sig_name):
-        señal = record.p_signal[:, indice]
-        caracteristicas_derivacion = extraer_caracteristicas(señal)
-
-        for nombre, valor in caracteristicas_derivacion.items():
-            nombre_completo = f"{derivacion}_{nombre}"
-            caracteristicas_ecg[nombre_completo] = valor
+    caracteristicas_ecg = extraer_caracteristicas_registro(record)
 
     print("\nCaracterísticas de las 12 derivaciones:")
 
